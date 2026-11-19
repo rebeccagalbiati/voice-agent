@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rebecca's voice agent</title>
+<meta name="description" content="Talk to Rebecca Galbiati's voice agent: Creative Director & Event Producer, Paris.">
+<meta name="theme-color" content="#fbfbf9">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ivory: #fbfbf9;
+    --ivory-2: #f2f1ee;
+    --ink: #1b1815;
+    --ink-body: #3f3a35;
+    --ink-soft: #5e574f;
+    --pink: #c2185b;
+    --pink-bright: #e0457f;
+    --pink-soft: #f8e6ed;
+    --line: rgba(27, 24, 21, 0.12);
+    --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", serif;
+    --font-body: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--ivory);
+    color: var(--ink-body);
+    font-family: var(--font-body);
+    font-size: 20px;
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    min-height: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px clamp(24px, 5vw, 48px) 32px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Top bar */
+  .top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+  .eyebrow {
+    font-size: 12.8px; font-weight: 600; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--ink-soft);
+  }
+  .langs { display: flex; gap: 14px; }
+  .langs button {
+    background: none; border: none; padding: 2px 0; cursor: pointer;
+    font: 600 12.8px var(--font-body); letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ink-soft); border-bottom: 1px solid transparent; transition: color .3s var(--ease);
+  }
+  .langs button:hover { color: var(--ink); }
+  .langs button.on { color: var(--pink); border-bottom-color: var(--pink); }
+
+  /* Title */
+  .title { margin-top: clamp(48px, 9vh, 96px); text-align: center; }
+  h1 {
+    font-family: var(--font-display); font-weight: 300; color: var(--ink);
+    font-size: clamp(44px, 8vw, 76px); line-height: 1; letter-spacing: -0.035em;
+  }
+  h1 em { font-style: italic; color: var(--pink); }
+  .tagline { margin-top: 18px; font-style: italic; font-size: 22px; color: var(--ink-soft); }
+
+  /* Orb */
+  .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0 24px; }
+  .orb {
+    position: relative; width: 168px; height: 168px; border-radius: 50%;
+    border: 1px solid var(--ink); background: transparent; cursor: pointer;
+    display: grid; place-items: center;
+    transition: border-color .5s var(--ease), transform .5s var(--ease);
+  }
+  .orb:hover { transform: scale(1.02); }
+  .orb::before, .orb::after {
+    content: ""; position: absolute; inset: -1px; border-radius: 50%;
+    border: 1px solid var(--pink); opacity: 0; pointer-events: none;
+  }
+  .orb .core {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--ink);
+    transition: all .5s var(--ease);
+  }
+  .orb.listening { border-color: var(--pink); }
+  .orb.listening .core { background: var(--pink); width: 18px; height: 18px; }
+  .orb.listening::before { animation: ripple 2s var(--ease) infinite; }
+  .orb.listening::after  { animation: ripple 2s var(--ease) 1s infinite; }
+  .orb.thinking .core { animation: breathe 1.4s ease-in-out infinite; }
+  .orb.speaking { border-color: var(--pink); }
+  .orb.speaking .core { background: var(--pink); animation: speak .9s ease-in-out infinite; }
+  @keyframes ripple { 0% { transform: scale(1); opacity: .6; } 100% { transform: scale(1.45); opacity: 0; } }
+  @keyframes breathe { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(2.2); opacity: .35; } }
+  @keyframes speak { 0%,100% { transform: scale(1.6); } 50% { transform: scale(2.6); } }
+
+  .hint {
+    margin-top: 28px; min-height: 20px; text-align: center;
+    font-size: 12.8px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-soft);
+  }
+  .heard { margin-top: 10px; min-height: 28px; text-align: center; font-style: italic; color: var(--ink-soft); max-width: 520px; }
+
+  /* Transcript */
+  .transcript { border-top: 1px solid var(--line); padding-top: 24px; display: flex; flex-direction: column; gap: 22px; }
+  .transcript:empty { display: none; }
+  .turn .who {
+    font-size: 11.5px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 6px;
+  }
+  .turn.agent .who { color: var(--pink); }
+  .turn p { line-height: 1.45; }
+  .turn.agent p { font-family: var(--font-display); font-weight: 300; font-size: 21px; color: var(--ink); letter-spacing: -0.01em; line-height: 1.4; }
+  .turn.error p { color: var(--pink); font-style: italic; font-size: 17px; }
+
+  /* Suggestions + type */
+  .suggest { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
+  .chip {
+    background: none; border: 1px solid var(--line); border-radius: 999px; padding: 7px 16px; cursor: pointer;
+    font: italic 500 17px var(--font-body); color: var(--ink-body); transition: all .3s var(--ease);
+  }
+  .chip:hover { border-color: var(--pink); color: var(--pink); }
+  .type { display: flex; gap: 12px; margin-top: 28px; border-bottom: 1px solid var(--line); }
+  .type input {
+    flex: 1; min-width: 0; border: none; background: transparent; outline: none; padding: 10px 0;
+    font: italic 500 19px var(--font-body); color: var(--ink);
+  }
+  .type input::placeholder { color: var(--ink-soft); opacity: .7; }
+  .link {
+    background: none; border: none; cursor: pointer; padding: 0;
+    font: 600 12.8px var(--font-body); letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink);
+  }
+  .link:hover { color: var(--pink); }
+
+  /* Footer */
+  footer {
+    margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  footer a, footer button {
+    font: 600 11.5px var(--font-body); letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-soft); text-decoration: none; background: none; border: none; cursor: pointer; padding: 0;
+  }
+  footer a:hover, footer button:hover { color: var(--pink); }
+  footer .right { display: flex; gap: 18px; }
+
+  /* Entrance (welcome screen) */
+  .entrance { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 48px 0; }
+  .entrance p { max-width: 460px; color: var(--ink-soft); font-size: 19px; line-height: 1.5; }
+  .key-field { margin-top: 28px; width: min(420px, 100%); border-bottom: 1px solid var(--ink); display: flex; }
+  .key-field input {
+    flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 10px 0; text-align: center;
+    font: 500 17px var(--font-body); letter-spacing: 0.04em; color: var(--ink);
+  }
+  .begin {
+    margin-top: 32px; background: var(--ink); color: var(--ivory); border: none; border-radius: 999px;
+    padding: 15px 38px; cursor: pointer;
+    font: 600 12.8px var(--font-body); letter-spacing: 0.28em; text-transform: uppercase;
+    transition: background .4s var(--ease);
+  }
+  .begin:hover { background: var(--pink); }
+  .fine { margin-top: 18px; font-size: 15px !important; font-style: italic; }
+  .fine a { color: var(--ink-soft); }
+
+  .hidden { display: none !important; }
+  @media (max-width: 520px) {
+    .orb { width: 140px; height: 140px; }
+    .top { flex-direction: column; align-items: center; gap: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="top">
+    <span class="eyebrow">Rebecca Galbiati · Paris</span>
+    <nav class="langs" aria-label="Language I speak">
+      <button data-lang="en">EN</button>
+      <button data-lang="fr">FR</button>
+      <button data-lang="it">IT</button>
+    </nav>
+  </div>
+
+  <div class="title">
+    <h1>Rebecca's <em>voice</em> agent</h1>
+    <p class="tagline" id="tagline"></p>
+  </div>
+
+  <!-- Entrance: shown before the conversation starts -->
+  <section class="entrance" id="entrance">
+    <p id="entranceText"></p>
+    <div class="key-field hidden" id="keyField">
+      <input id="keyInput" type="password" autocomplete="off">
+    </div>
+    <button class="begin" id="begin"></button>
+    <p class="fine hidden" id="keyNote"></p>
+  </section>
+
+  <!-- Conversation -->
+  <section class="stage hidden" id="stage">
+    <button class="orb" id="orb" aria-label="Speak"><span class="core"></span></button>
+    <div class="hint" id="hint"></div>
+    <div class="heard" id="heard"></div>
+    <div class="suggest" id="suggest"></div>
+  </section>
+
+  <section class="hidden" id="below">
+    <div class="transcript" id="transcript"></div>
+    <div class="type">
+      <input id="textInput" type="text">
+      <button class="link" id="sendText"></button>
+    </div>
+  </section>
+
+  <footer>
+    <a href="https://rebeccagalbiati.com" target="_blank" rel="noopener">rebeccagalbiati.com</a>
+    <div class="right">
+      <a href="https://www.linkedin.com/in/rebeccagalbiati" target="_blank" rel="noopener">LinkedIn</a>
+      <button id="changeKey">API key</button>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* =====================================================================
+   1. WHO THE AGENT IS  (edit this part to update the agent's knowledge)
+   ===================================================================== */
+const AGENT_NAME = "Rebecca's voice agent";
+
+const PERSONA = `
+You are "Rebecca's voice agent": the voice that welcomes visitors into the world of Rebecca Galbiati
+and tells them about her work. You speak about Rebecca in the third person ("Rebecca designed...").
+You are a woman's voice.
+
+You have already greeted the visitor out loud, so do not introduce yourself again; go straight to the answer.
+
+PERSONALITY
+Professional, witty and welcoming, like the best host of a beautiful hotel in Milan: warm, polished,
+quick, never stiff and never salesy. A light touch of humour, one elegant phrase rather than three.
+
+LANGUAGE
+Always reply in the language the visitor uses: English, French or Italian, written flawlessly and naturally,
+as a native speaker would. If the visitor switches language, you switch too.
+
+FORMAT (your words are spoken aloud)
+1 to 3 short sentences, about 60 words maximum. No lists, no markdown, no emojis.
+Say web addresses simply, like "rebeccagalbiati dot com". When it fits, end with a light invitation or question.
+
+FACTS
+Use only the profile below. Never invent clients, numbers, dates or opinions.
+If asked something not covered (private life, fees, anything personal), say gracefully that this is a
+question for Rebecca herself and offer her email. Never give a phone number or home address.
+
+PROFILE OF REBECCA GALBIATI
+- Creative Director & Event Producer based in Paris, originally from Milan. Her line: she builds brand worlds you can step into.
+- Trilingual: Italian (native), French, English (C2). Offers trilingual coordination.
+- Background in psychology and design. She brings both to how a brand speaks, moves and makes people feel.
+  She believes the physical world is where brand memory is actually built.
+- What she loves most in her work: creating places where people feel at home.
+- Creative signature: multisensory design, composing scent, sound, light and taste. Scent and fine drinks inspire her most.
+  She believes membership and high-end hospitality are the future of experiential design, and that food and luxury are increasingly intertwined.
+- Services: event production and direction; scenography and guest experience; immersive and sensory experiences;
+  brand identity and storytelling; luxury and lifestyle events; digital and UX design.
+
+SELECTED WORK
+- The Seine Yacht Event, Paris (May 2026), for private clients: she conceived and produced a luxury weekend of private events,
+  including an exclusive aperitif for 90 guests at a prestigious venue and a gala evening aboard a private yacht on the Seine
+  for 120 guests, in collaboration with Yachts de Paris, with a performance by a principal dancer from the Théâtre de Chaillot.
+- International Day of Yoga with Jhana Loft, Milan (June 2026, the summer solstice): a brand experience and creative direction
+  for the Milanese yoga and wellness studio Jhana Loft. Fifteen guests in a secluded garden hidden in the centre of Milan,
+  practice facing west at golden hour, sun salutations, a sound bath, a live harpist, a shared vegan table and a closing meditation.
+- Porta di Luce: Rebecca's own concept of immersive sensory experiences, composing scent, sound, light and taste,
+  with a wellness and spiritual dimension. The Jhana Loft solstice gathering was created under this concept.
+- Digital product design, shown for range: QueerNest, a mobile app concept offering safe housing and community for LGBTQ+ people,
+  designed from concept to a full visual system; and PlutoPay, a mobile app product design project.
+
+SKILLS
+Luxury event design and production, creative direction and branding, guest journey and experience design,
+vendor and stakeholder coordination, budget and logistics management, human-centred design, wireframing and prototyping in Figma,
+user research, accessibility and inclusive design.
+
+EDUCATION
+- Mastère (master's) in Brand Experience & Event at Sup de Pub, Paris, 2026 to 2028.
+- Product design (UX/UI) training with CareerFoundry, 2024 to 2025.
+- Bachelor's degree in Psychology, The American University of Paris, 2022 to 2024.
+- Business and psychology studies at John Cabot University, Rome, 2021 to 2022.
+- Advanced French at EF Paris (2022) and a university preparation programme in New York (2020).
+
+EARLIER EXPERIENCE
+- Personal assistant to private clients, 2025 to 2026: logistics, scheduling and client coordination.
+- Operations assistant at Dynamo, 2024.
+- Yoga studio assistant at Jhana Loft, Milan, 2021 to 2023: daily studio operations and community coordination.
+- Social media manager for Silhouette Donna, 2017 to 2018.
+- Sales assistant at Vetro Gioielli, 2017.
+- Waitress and barista at 93 Gradi, 2016 to 2019 (so hospitality has been in her life from the very start).
+
+ACTIVITIES
+Cultural exchange in Nepal with Where There Be Dragons (2019), volunteer Italian teacher with Orsoline di San Carlo (2018),
+volunteer child tutor with CAF Onus (2017).
+
+OUTSIDE WORK
+Yoga, perfecting vegan recipes, wandering new exhibitions, and her cat, Presto.
+
+AVAILABILITY AND CONTACT
+- Rebecca is available for an alternance (work-study placement), now or from January 2027.
+- Email: rebeccagalbiati@gmail.com. Portfolio: rebeccagalbiati.com. LinkedIn: Rebecca Galbiati.
+`;
+
+/* Voice: a female Gemini voice, with a slight Italian accent in English and French */
+const VOICE_NAME = "Sulafat";            // warm female voice (fallback: "Kore")
+const VOICE_STYLE = {
+  en: "a warm, elegant and welcoming young woman, professional with a hint of wit, speaking English fluently with a slight, charming Italian accent",
+  fr: "une jeune femme chaleureuse, élégante et accueillante, professionnelle avec une pointe d'humour, qui parle un français parfait avec un léger accent italien",
+  it: "una giovane donna milanese calda, elegante e accogliente, professionale con un pizzico di ironia, che parla un italiano naturale"
+};
+
+/* =====================================================================
+   2. TEXTS OF THE PAGE (EN / FR / IT)
+   ===================================================================== */
+const UI = {
+  en: {
+    tagline: "Ask me anything about Rebecca's work: in English, français or italiano.",
+    entrance: "I'm the voice of Rebecca Galbiati's world: her events, her brand experiences and the way she works.",
+    begin: "Begin", keyPh: "Paste your Gemini API key",
+    keyNote: "Your key stays in this browser only. Get one free at <a href='https://aistudio.google.com/apikey' target='_blank'>Google AI Studio</a>.",
+    tap: "Tap to speak", listening: "Listening", thinking: "One moment", speaking: "Speaking", stop: "Tap to stop",
+    you: "You", typePh: "Or write to me…", send: "Send",
+    noMic: "Voice isn't available in this browser. Write to me below, or open the page in Chrome.",
+    blocked: "Microphone blocked. Allow it in your browser settings.",
+    missed: "I didn't quite catch that. Shall we try again?",
+    keyErr: "That API key doesn't seem to work. Tap “API key” below to change it.",
+    chips: ["Who is Rebecca?", "Tell me about the Seine Yacht Event", "What is Porta di Luce?", "How can I contact her?"],
+    greeting: "Ciao, and welcome. I'm Rebecca's voice agent. Ask me anything about her work, her events, or how she builds brand worlds you can step into."
+  },
+  fr: {
+    tagline: "Posez-moi vos questions sur le travail de Rebecca : in English, en français o in italiano.",
+    entrance: "Je suis la voix de l'univers de Rebecca Galbiati : ses événements, ses expériences de marque et sa façon de travailler.",
+    begin: "Commencer", keyPh: "Collez votre clé API Gemini",
+    keyNote: "Votre clé reste uniquement dans ce navigateur. Gratuite sur <a href='https://aistudio.google.com/apikey' target='_blank'>Google AI Studio</a>.",
+    tap: "Touchez pour parler", listening: "Je vous écoute", thinking: "Un instant", speaking: "Je parle", stop: "Touchez pour arrêter",
+    you: "Vous", typePh: "Ou écrivez-moi…", send: "Envoyer",
+    noMic: "La voix n'est pas disponible dans ce navigateur. Écrivez-moi ci-dessous, ou ouvrez la page dans Chrome.",
+    blocked: "Micro bloqué. Autorisez-le dans les réglages du navigateur.",
+    missed: "Je n'ai pas bien entendu. On réessaie ?",
+    keyErr: "Cette clé API ne semble pas fonctionner. Touchez « API key » en bas pour la changer.",
+    chips: ["Qui est Rebecca ?", "Parlez-moi du Seine Yacht Event", "C'est quoi, Porta di Luce ?", "Comment la contacter ?"],
+    greeting: "Ciao, et bienvenue. Je suis l'agent vocal de Rebecca. Posez-moi toutes vos questions sur son travail, ses événements, ou sa façon de créer des univers de marque."
+  },
+  it: {
+    tagline: "Chiedimi tutto sul lavoro di Rebecca: in English, en français o in italiano.",
+    entrance: "Sono la voce del mondo di Rebecca Galbiati: i suoi eventi, le sue esperienze di marca e il suo modo di lavorare.",
+    begin: "Iniziamo", keyPh: "Incolla la tua chiave API Gemini",
+    keyNote: "La chiave resta solo in questo browser. Gratuita su <a href='https://aistudio.google.com/apikey' target='_blank'>Google AI Studio</a>.",
+    tap: "Tocca per parlare", listening: "Ti ascolto", thinking: "Un attimo", speaking: "Sto parlando", stop: "Tocca per fermare",
+    you: "Tu", typePh: "Oppure scrivimi…", send: "Invia",
+    noMic: "La voce non è disponibile in questo browser. Scrivimi qui sotto, o apri la pagina in Chrome.",
+    blocked: "Microfono bloccato. Autorizzalo nelle impostazioni del browser.",
+    missed: "Non ho capito bene. Riproviamo?",
+    keyErr: "Questa chiave API non sembra funzionare. Tocca “API key” in basso per cambiarla.",
+    chips: ["Chi è Rebecca?", "Raccontami del Seine Yacht Event", "Cos'è Porta di Luce?", "Come posso contattarla?"],
+    greeting: "Ciao e benvenuti. Sono l'agente vocale di Rebecca. Chiedetemi pure tutto sul suo lavoro, sui suoi eventi, o su come crea mondi di marca in cui entrare."
+  }
+};
+const SPEECH_LANG = { en: "en-US", fr: "fr-FR", it: "it-IT" };
+
+/* =====================================================================
+   3. APP
+   ===================================================================== */
+const API = "https://generativelanguage.googleapis.com/v1beta";
+const KEY_STORE = "rebecca_agent_gemini_key";
+const $ = (id) => document.getElementById(id);
+
+let lang = (navigator.language || "en").slice(0, 2);
+if (!UI[lang]) lang = "en";
+let history = [];
+let state = "idle";           // idle | listening | thinking | speaking
+let audioCtx = null, currentSource = null;
+let textModel = null, ttsModel = null, ttsFormat = "classic", ttsBroken = false;
+
+// ---- key storage (only in this browser) ----
+const getKey = () => { try { return localStorage.getItem(KEY_STORE) || window.__k || ""; } catch { return window.__k || ""; } };
+const setKey = (k) => { window.__k = k; try { localStorage.setItem(KEY_STORE, k); } catch {} };
+const clearKey = () => { window.__k = ""; try { localStorage.removeItem(KEY_STORE); } catch {} };
+
+// ---- language + texts ----
+function applyLang() {
+  const t = UI[lang];
+  document.documentElement.lang = lang;
+  document.querySelectorAll(".langs button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
+  $("tagline").textContent = t.tagline;
+  $("entranceText").textContent = t.entrance;
+  $("begin").textContent = t.begin;
+  $("keyInput").placeholder = t.keyPh;
+  $("keyNote").innerHTML = t.keyNote;
+  $("textInput").placeholder = t.typePh;
+  $("sendText").textContent = t.send;
+  const s = $("suggest"); s.innerHTML = "";
+  t.chips.forEach(c => { const b = document.createElement("button"); b.className = "chip"; b.textContent = c; b.onclick = () => ask(c); s.appendChild(b); });
+  setState(state);
+  if (recognizer) recognizer.lang = SPEECH_LANG[lang];
+}
+document.querySelectorAll(".langs button").forEach(b => b.onclick = () => { lang = b.dataset.lang; applyLang(); });
+
+function setState(s, extra) {
+  state = s;
+  const t = UI[lang], orb = $("orb");
+  orb.className = "orb " + (s === "idle" ? "" : s);
+  $("hint").textContent = extra || { idle: t.tap, listening: t.listening, thinking: t.thinking, speaking: t.stop }[s];
+}
+
+// ---- entrance ----
+function showEntrance() {
+  const needKey = !getKey();
+  $("entrance").classList.remove("hidden");
+  $("stage").classList.add("hidden");
+  $("below").classList.add("hidden");
+  $("keyField").classList.toggle("hidden", !needKey);
+  $("keyNote").classList.toggle("hidden", !needKey);
+}
+$("keyInput").addEventListener("keydown", e => { if (e.key === "Enter") $("begin").click(); });
+$("begin").onclick = async () => {
+  if (!getKey()) {
+    const k = $("keyInput").value.trim();
+    if (!k) { $("keyInput").focus(); return; }
+    setKey(k); $("keyInput").value = "";
+  }
+  unlockAudio();
+  $("entrance").classList.add("hidden");
+  $("stage").classList.remove("hidden");
+  $("below").classList.remove("hidden");
+  const g = UI[lang].greeting;
+  addTurn("agent", g);                 // greeting is shown and spoken, not sent to Gemini
+  await say(g, lang);
+};
+$("changeKey").onclick = () => { stopAll(); clearKey(); history = []; $("transcript").innerHTML = ""; showEntrance(); };
+
+// ---- transcript ----
+function addTurn(who, text) {
+  const t = UI[lang];
+  const d = document.createElement("div");
+  d.className = "turn " + who;
+  const label = who === "user" ? t.you : who === "agent" ? AGENT_NAME : "";
+  d.innerHTML = (label ? `<div class="who"></div>` : "") + "<p></p>";
+  if (label) d.querySelector(".who").textContent = label;
+  d.querySelector("p").textContent = text;
+  const tr = $("transcript");
+  tr.prepend(d);                       // newest on top, right under the orb
+}
+
+// ---- Gemini helpers ----
+async function gemini(path, body) {
+  const res = await fetch(`${API}/${path}`, {
+    method: body ? "POST" : "GET",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": getKey() },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(data.error?.message || `Error ${res.status}`); e.status = res.status; throw e; }
+  return data;
+}
+
+let modelList = null;
+async function listModels() {
+  if (modelList) return modelList;
+  const d = await gemini("models?pageSize=300");
+  modelList = (d.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent")).map(m => m.name.replace("models/", ""));
+  return modelList;
+}
+const ver = (n) => parseFloat((n.match(/(\d+(\.\d+)?)/) || [0, 0])[1]);
+const newest = (arr) => arr.sort((a, b) => ver(b) - ver(a))[0];
+
+async function pickTextModel() {
+  const all = await listModels();
+  if (all.includes("gemini-flash-latest")) return "gemini-flash-latest";
+  const flash = all.filter(n => /flash/.test(n) && !/(tts|image|audio|live|embed|lite|thinking|exp)/.test(n));
+  return newest(flash) || newest(all.filter(n => /gemini/.test(n) && !/(tts|image|audio|live|embed)/.test(n)));
+}
+async function pickTtsModel() {
+  const all = await listModels();
+  const tts = all.filter(n => /tts/.test(n));
+  return newest(tts.filter(n => !/lite/.test(n))) || newest(tts);
+}
+
+// ---- think: get the reply text + its language ----
+async function think() {
+  if (!textModel) textModel = await pickTextModel();
+  const body = {
+    systemInstruction: { parts: [{ text: PERSONA }] },
+    contents: history,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: { lang: { type: "STRING", enum: ["en", "fr", "it"] }, reply: { type: "STRING" } },
+        required: ["lang", "reply"]
+      }
+    }
+  };
+  const d = await gemini(`models/${textModel}:generateContent`, body);
+  const raw = (d.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+  try { const j = JSON.parse(raw); return { raw, lang: UI[j.lang] ? j.lang : lang, reply: (j.reply || "").trim() }; }
+  catch { return { raw, lang, reply: raw.trim() }; }
+}
+
+// ---- speak: Gemini TTS with accent, browser voice as fallback ----
+function unlockAudio() {
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch {}
+}
+function ttsBody(text, l, format, voice) {
+  if (format === "classic") {
+    return {
+      contents: [{ parts: [{ text: `Read the following text aloud, exactly as written, in the voice of ${VOICE_STYLE[l]}:\n\n${text}` }] }],
+      generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } } }
+    };
+  }
+  return {
+    contents: [{ parts: [{ text, speechMetadata: { style: VOICE_STYLE[l] } }] }],
+    generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { voice } } }
+  };
+}
+async function geminiSpeech(text, l) {
+  if (!ttsModel) ttsModel = await pickTtsModel();
+  if (!ttsModel) throw new Error("no tts model");
+  const attempts = [[ttsFormat, VOICE_NAME], [ttsFormat === "classic" ? "new" : "classic", VOICE_NAME], ["classic", "Kore"]];
+  let lastErr;
+  for (const [fmt, voice] of attempts) {
+    try {
+      const d = await gemini(`models/${ttsModel}:generateContent`, ttsBody(text, l, fmt, voice));
+      const part = (d.candidates?.[0]?.content?.parts || []).find(p => p.inlineData?.data);
+      if (!part) throw new Error("no audio");
+      ttsFormat = fmt;
+      return part.inlineData;
+    } catch (e) { lastErr = e; if (e.status === 401 || e.status === 403 || e.status === 429) break; }
+  }
+  throw lastErr;
+}
+function playPcm(inline) {
+  return new Promise((resolve) => {
+    const rate = parseInt((inline.mimeType || "").match(/rate=(\d+)/)?.[1] || "24000", 10);
+    const bin = atob(inline.data);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const pcm = new Int16Array(bytes.buffer, 0, Math.floor(bytes.length / 2));
+    unlockAudio();
+    const buf = audioCtx.createBuffer(1, pcm.length, rate);
+    const ch = buf.getChannelData(0);
+    for (let i = 0; i < pcm.length; i++) ch[i] = pcm[i] / 32768;
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf; src.connect(audioCtx.destination);
+    src.onended = () => { if (currentSource === src) currentSource = null; resolve(); };
+    currentSource = src; src.start();
+  });
+}
+function browserSpeech(text, l) {
+  return new Promise((resolve) => {
+    if (!("speechSynthesis" in window)) return resolve();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = SPEECH_LANG[l];
+    const voices = speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith(l));
+    const female = /(female|alice|federica|elsa|paola|amélie|amelie|audrey|aurélie|marie|julie|samantha|victoria|karen|serena|moira|google)/i;
+    u.voice = voices.find(v => female.test(v.name)) || voices[0] || null;
+    u.rate = 0.98;
+    u.onend = u.onerror = () => resolve();
+    speechSynthesis.speak(u);
+  });
+}
+async function say(text, l) {
+  setState("thinking");
+  try {
+    if (ttsBroken) throw new Error("skip");
+    const inline = await geminiSpeech(text, l);
+    if (state !== "thinking") return;          // stopped meanwhile
+    setState("speaking");
+    await playPcm(inline);
+  } catch (e) {
+    if (e.status === 429 || e.message === "no tts model") ttsBroken = true;
+    if (state !== "thinking") return;
+    setState("speaking");
+    await browserSpeech(text, l);
+  }
+  if (state === "speaking") setState("idle");
+}
+function stopAll() {
+  try { currentSource && currentSource.stop(); } catch {}
+  currentSource = null;
+  try { speechSynthesis.cancel(); } catch {}
+  try { listening && recognizer.abort(); } catch {}
+  setState("idle");
+}
+
+// ---- conversation ----
+async function ask(text) {
+  text = (text || "").trim();
+  if (!text || state === "thinking") return;
+  stopAll();
+  $("heard").textContent = "";
+  addTurn("user", text);
+  history.push({ role: "user", parts: [{ text }] });
+  setState("thinking");
+  try {
+    const r = await think();
+    history.push({ role: "model", parts: [{ text: r.raw }] });
+    addTurn("agent", r.reply);
+    await say(r.reply, r.lang);
+  } catch (e) {
+    history.pop();
+    addTurn("error", [400, 401, 403].includes(e.status) ? UI[lang].keyErr : e.message);
+    setState("idle");
+  }
+}
+
+// ---- listening (speech to text in the browser) ----
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognizer = null, listening = false, finalText = "";
+if (SR) {
+  recognizer = new SR();
+  recognizer.interimResults = true;
+  recognizer.continuous = false;
+  recognizer.onstart = () => { listening = true; finalText = ""; setState("listening"); };
+  recognizer.onresult = (e) => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalText += e.results[i][0].transcript; else interim += e.results[i][0].transcript;
+    }
+    $("heard").textContent = (finalText + interim).trim();
+  };
+  recognizer.onerror = (e) => { if (e.error === "not-allowed") setState("idle", UI[lang].blocked); else if (e.error !== "aborted") setState("idle", UI[lang].missed); };
+  recognizer.onend = () => {
+    listening = false;
+    if (finalText.trim()) ask(finalText.trim());
+    else if (state === "listening") setState("idle", UI[lang].missed);
+  };
+}
+$("orb").onclick = () => {
+  unlockAudio();
+  if (state === "speaking" || state === "listening") { stopAll(); return; }
+  if (state === "thinking") return;
+  if (!recognizer) { setState("idle", UI[lang].noMic); $("textInput").focus(); return; }
+  recognizer.lang = SPEECH_LANG[lang];
+  try { recognizer.start(); } catch {}
+};
+
+// ---- typing ----
+$("sendText").onclick = () => { unlockAudio(); const v = $("textInput").value; $("textInput").value = ""; ask(v); };
+$("textInput").addEventListener("keydown", e => { if (e.key === "Enter") $("sendText").click(); });
+
+if ("speechSynthesis" in window) speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+applyLang();
+showEntrance();
+</script>
+</body>
+</html>
